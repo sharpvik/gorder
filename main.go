@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io"
 	"log"
 	"os"
 	"sort"
@@ -17,15 +20,15 @@ var app = cli.App{
 }
 
 func action(c *cli.Context) error {
-	filename := c.Args().First()
-	bytes, err := os.ReadFile(filename)
+	fileName := c.Args().First()
+	fileContents, err := os.ReadFile(fileName)
 	if err != nil {
 		return err
 	}
 
 	parsedFile, err := parser.ParseFile(
 		token.NewFileSet(),
-		"", bytes,
+		"", fileContents,
 		parser.AllErrors,
 	)
 	if err != nil {
@@ -35,15 +38,27 @@ func action(c *cli.Context) error {
 	sort.Slice(parsedFile.Decls, func(i, j int) bool {
 		return declOrder(parsedFile.Decls[i]) < declOrder(parsedFile.Decls[j])
 	})
+	orderedFileContents := prettyPrint(parsedFile, fileContents)
 
-	for _, decl := range parsedFile.Decls {
-		log.Printf("decl type '%T' at (%d -> %d)", decl, decl.Pos(), decl.End())
-		if genDecl, ok := decl.(*ast.GenDecl); ok {
-			log.Printf("  gen decl token %v", genDecl.Tok)
-		}
+	file, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = io.Copy(file, orderedFileContents)
+	return err
+}
+
+func prettyPrint(ordered *ast.File, initial []byte) *bytes.Buffer {
+	w := new(bytes.Buffer)
+
+	fmt.Fprintf(w, "package %s\n\n", ordered.Name)
+	for _, decl := range ordered.Decls {
+		w.Write(initial[decl.Pos()-1 : decl.End()])
+		w.WriteByte('\n')
 	}
 
-	return nil
+	return w
 }
 
 func declOrder(decl ast.Decl) int {
