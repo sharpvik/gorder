@@ -23,7 +23,7 @@ func ReadFile(name string) (*File, error) {
 	parsedFile, err := parser.ParseFile(
 		token.NewFileSet(),
 		"", fileContents,
-		parser.AllErrors,
+		parser.ParseComments|parser.AllErrors,
 	)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,13 @@ func NewFile(raw []byte, pkg *ast.File) *File {
 func (file *File) Pretty() *bytes.Buffer {
 	w := &bytes.Buffer{}
 
+	if file.pkg.Doc != nil {
+		for _, each := range file.pkg.Doc.List {
+			w.WriteString(each.Text + "\n")
+		}
+	}
 	fmt.Fprintf(w, "package %s\n\n", file.pkg.Name)
+
 	for i, decl := range file.pkg.Decls {
 		from, to := declPos(decl)
 		w.Write(file.raw[from:to])

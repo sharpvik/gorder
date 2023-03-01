@@ -1,3 +1,8 @@
+// does this count?
+
+/*
+different kind of comment
+*/
 package main
 
 import (
@@ -7,10 +12,18 @@ import (
 	cli "github.com/urfave/cli/v2"
 )
 
-var (
-	// dryRun some important comment
-	dryRun bool
-)
+// app is something
+var app = cli.App{
+	Name: "gorder",
+	Flags: []cli.Flag{
+		&cli.BoolFlag{
+			Name:        "dry-run",
+			Value:       false,
+			Destination: &dryRun,
+		},
+	},
+	Action: action,
+}
 
 func action(c *cli.Context) error {
 	return nil
@@ -24,14 +37,8 @@ func main() {
 
 const magic = 42
 
-var app = cli.App{
-	Name: "gorder",
-	Flags: []cli.Flag{
-		&cli.BoolFlag{
-			Name:        "dry-run",
-			Value:       false,
-			Destination: &dryRun,
-		},
-	},
-	Action: action,
-}
+// does this do anything?
+var (
+	// dryRun some important comment
+	dryRun bool
+)

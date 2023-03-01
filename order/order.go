@@ -22,13 +22,23 @@ func declOrder(decl ast.Decl) int {
 	return order[decl.(*ast.GenDecl).Tok]
 }
 
-// TODO: take comments into consideration.
+// TODO: take non-doc comments into consideration.
 func declPos(decl ast.Decl) (from, to token.Pos) {
 	switch x := decl.(type) {
 	case *ast.FuncDecl:
-		return x.Pos() - 1, decl.End() - 1
+		if x.Doc != nil {
+			from = x.Doc.Pos() - 1
+		} else {
+			from = x.Pos() - 1
+		}
+		return from, decl.End() - 1
 	case *ast.GenDecl:
-		return x.Pos() - 1, decl.End() - 1
+		if x.Doc != nil {
+			from = x.Doc.Pos() - 1
+		} else {
+			from = x.Pos() - 1
+		}
+		return from, decl.End() - 1
 	default:
 		log.Fatal("found a bad declaration in file")
 		return

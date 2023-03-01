@@ -8,7 +8,9 @@ import (
 )
 
 var app = cli.App{
-	Name: "gorder",
+	Name:      "gorder",
+	Usage:     "Order declarations in your Go files",
+	UsageText: "gorder [global options] ./path/to/file.go",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:        "dry-run",
